@@ -9,7 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
@@ -42,7 +44,10 @@ public class YamlTest {
             var mapper = new ObjectMapper(new YAMLFactory());
             mapper.findAndRegisterModules();
 
-            var pod = mapper.readValue(input, Pod.class);
+            var resource = mapper.readValue(input, KubernetesResource.class);
+            assertInstanceOf(Pod.class, resource);
+
+            var pod = (Pod) resource;
             var port = pod.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort();
             assertEquals(80, port);
         }
