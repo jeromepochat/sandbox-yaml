@@ -5,6 +5,9 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.fabric8.kubernetes.api.model.Pod;
@@ -23,12 +26,35 @@ public class YamlTest {
     }
 
     @Test
-    public void parseUsingSnake() throws IOException {
+    public void parseUsingSnake20() throws IOException {
         try (var input = getClass().getClassLoader().getResourceAsStream("pod.yaml")) {
             var yaml = new Yaml();
             var pod = yaml.loadAs(input, Pod.class);
             var port = pod.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort();
 
+            assertEquals(80, port);
+        }
+    }
+
+    @Test
+    public void parseUsingSnake26() throws IOException {
+        try (var input = getClass().getClassLoader().getResourceAsStream("pod.yaml")) {
+            org.snakeyaml.engine.v2.api.LoadSettings settings = org.snakeyaml.engine.v2.api.LoadSettings.builder().build();
+            org.snakeyaml.engine.v2.api.Load load = new org.snakeyaml.engine.v2.api.Load(settings);
+            var map = load.loadAllFromInputStream(input);
+
+            System.out.println(map);
+        }
+    }
+
+    @Test
+    public void parseUsingJackson() throws IOException {
+        try (var input = getClass().getClassLoader().getResourceAsStream("pod.yaml")) {
+            var mapper = new ObjectMapper(new YAMLFactory());
+            mapper.findAndRegisterModules();
+
+            var pod = mapper.readValue(input, Pod.class);
+            var port = pod.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort();
             assertEquals(80, port);
         }
     }
